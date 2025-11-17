@@ -4,14 +4,11 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்</title>
-
 <!-- Noto Sans Tamil webfont (used for on-screen & for html2pdf rendering) -->
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
-
 <!-- html2pdf bundle (includes html2canvas + jspdf) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-
 <style>
   :root{
     --accent:#2b6cb0;
@@ -86,42 +83,35 @@
 <body>
 <header>📚 அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்</header>
 <div class="subheader">மாணவர்களுக்குப் பொருத்தமான செய்திகள் — கல்வி, அறிவியல், விளையாட்டு, விருதுகள், சுற்றுச்சூழல்</div>
-
 <div class="controls" aria-hidden="false">
   <button id="playBtn">🔊 நிகழ் செய்தியை படிக்க</button>
   <button id="pauseBtn" class="ghost">⏸ நிறுத்த</button>
   <button id="resumeBtn" class="ghost">▶ தொடர்க்க</button>
   <button id="stopBtn" class="ghost">⏹ நிறுத்து</button>
-
   <div id="speedWrap" style="margin-left:6px;">
     <label style="color:#083358;font-weight:600;">வேகம்</label>
     <input id="speedRange" type="range" min="0.7" max="1.3" step="0.05" value="0.95" style="margin-left:8px;">
     <span id="speedLabel" style="color:#083358;margin-left:6px;">0.95×</span>
   </div>
-
   <button id="pdfBtn">📄 PDF பதிவிறக்க</button>
   <button id="refreshBtn" class="ghost" title="செய்திகளை மீளுபதிவு">🔄 புதுப்பி</button>
 </div>
-
 <div id="newsWrap">
   <div id="news">செய்திகள்ロード中…</div>
 </div>
-
 <!-- Hidden printable element used for PDF generation -->
 <div id="printable" style="display:none;"></div>
-
 <script>
 /* ============================
-   Tamil-only feeds (tested)
+   Google News Tamil topic searches (working as of 2025)
    ============================ */
 const FEEDS = [
-  "https://www.dinamani.com/feeds/?id=Home",                 // Dinamani (home)
-  "https://www.dinamani.com/education/feeder/default.rss",   // Dinamani education
-  "https://www.hindutamil.in/rss",                           // Hindutamil
-  "https://www.puthiyathalaimurai.com/rss/ta",               // Puthiya Thalaimurai
-  "https://www.maalaimalar.com/rss/ta"                       // Maalai Malar
+  "https://news.google.com/rss/search?q=கல்வி&hl=ta&gl=IN&ceid=IN:ta", // Education
+  "https://news.google.com/rss/search?q=அறிவியல்&hl=ta&gl=IN&ceid=IN:ta", // Science
+  "https://news.google.com/rss/search?q=விளையாட்டு&hl=ta&gl=IN&ceid=IN:ta", // Sports
+  "https://news.google.com/rss/search?q=விருது&hl=ta&gl=IN&ceid=IN:ta", // Awards
+  "https://news.google.com/rss/search?q=சுற்றுச்சூழல்&hl=ta&gl=IN&ceid=IN:ta" // Environment
 ];
-
 /* ============================
    Student-friendly filter (Tamil)
    ============================ */
@@ -131,28 +121,22 @@ function filterStudentNews(arr) {
     "அட்டா","அடித்து","குண்டு","தாக்குதல்","சண்டை","குற்றம்","தற்கொலை",
     "வெறுஷம்","அரசியல்","தேர்வு முடிவுகள் (negative context?)"
   ].map(s=>s.toLowerCase());
-
   const allowTags = [
     "கல்வி","மாணவர்","மாணவர்கள்","பள்ளி","தேர்வு","பாடம்","விழா","விளையாட்டு","வெற்றி",
     "பதக்கம்","விருது","அறிவியல்","தொழில்நுட்பம்","இஸ்ரோ","விண்வெளி","ஆசிரியர்",
     "தொடக்கம்","புதிய","ஆவேஷம்","சுற்றுச்சூழல்","புத்தகம்","நுட்பம்","ஆய்வு","ரூட்டின்"
   ].map(s=>s.toLowerCase());
-
   return arr.filter(item => {
     const t = (item.title + " " + item.description).toLowerCase();
-
     // Exclude if any bad word present
     for (const b of bad) if (t.includes(b)) return false;
-
     // Prefer items that include at least one allowed tag OR are neutral
     for (const g of allowTags) if (t.includes(g)) return true;
-
     // If neither allowed nor banned, still allow (so we don't become too strict),
     // but we can deprioritize later. For now include.
     return true;
   });
 }
-
 /* ============================
    RSS -> JSON via rss2json (public proxy)
    Note: rss2json has rate limits but works for basic usage.
@@ -176,12 +160,10 @@ async function fetchFeedAsJson(url) {
     return [];
   }
 }
-
 async function loadAll() {
   // fetch all feeds in parallel (but handle failures gracefully)
   const promises = FEEDS.map(f => fetchFeedAsJson(f));
   const lists = await Promise.all(promises);
-
   // flatten & dedupe by title
   const flat = lists.flat();
   const seen = new Set();
@@ -193,33 +175,27 @@ async function loadAll() {
     seen.add(key);
     uniq.push(it);
   }
-
   // sort by pubDate desc if available
   uniq.sort((a,b) => {
     const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
     const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
     return db - da;
   });
-
   // apply filter
   const filtered = filterStudentNews(uniq);
-
   // return top 30 or less
   return filtered.slice(0, 30);
 }
-
 /* ============================
    Render on page
    ============================ */
 function renderNews(list) {
   const container = document.getElementById("news");
   container.innerHTML = "";
-
   if (!list.length) {
     container.innerHTML = "<p style='text-align:center;color:#55616a;'>செய்திகள் கிடைக்கவில்லை. புதுப்பிப்புக் கோருங்கள்.</p>";
     return;
   }
-
   // We create three logical sections: Education (if any), Sports, General
   // But for simplicity, show single list grouped by recency
   const sec = document.createElement("section");
@@ -227,7 +203,6 @@ function renderNews(list) {
   heading.className = "sectionTitle";
   heading.textContent = "சமீபத்திய செய்திகள்";
   sec.appendChild(heading);
-
   list.forEach(item => {
     const card = document.createElement("article");
     card.className = "card";
@@ -247,24 +222,20 @@ function renderNews(list) {
     read.target = "_blank";
     read.rel = "noopener";
     read.textContent = "மேலும் படிக்க ↗";
-
     card.appendChild(t);
     card.appendChild(d);
     card.appendChild(m);
     card.appendChild(read);
     sec.appendChild(card);
   });
-
   container.appendChild(sec);
 }
-
 /* ============================
    Text-to-Speech (Tamil)
    ============================ */
 let allVoices = [];
 function loadVoices(){ allVoices = window.speechSynthesis.getVoices(); }
 window.speechSynthesis.onvoiceschanged = loadVoices;
-
 function getTamilVoice() {
   if (!allVoices.length) loadVoices();
   // try to find ta-IN voice
@@ -273,7 +244,6 @@ function getTamilVoice() {
   // fallback: any voice that speaks en-IN (works poorly), or first voice
   return allVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("en-in")) || allVoices[0];
 }
-
 function buildScriptFromDOM() {
   // Gather title + each card's title + first sentence of desc
   const parts = [];
@@ -289,7 +259,6 @@ function buildScriptFromDOM() {
   parts.push("இவையால் உங்களுக்குப் பயனாகவாகட்டும். சிறந்த நாளாக இருக்க வேண்டும்.");
   return parts.join(". ");
 }
-
 let currentUtters = [];
 function speakAll(rate=0.95) {
   window.speechSynthesis.cancel();
@@ -304,7 +273,6 @@ function speakAll(rate=0.95) {
   window.speechSynthesis.speak(u);
   currentUtters = [u];
 }
-
 /* ============================
    PDF generation using html2pdf
    Ensures Tamil renders correctly by using the page's webfont.
@@ -314,18 +282,15 @@ function preparePrintable(list) {
   const printable = document.getElementById("printable");
   printable.style.display = "block"; // make visible for accurate rendering
   printable.innerHTML = "";
-
   const h = document.createElement("h1");
   h.textContent = "அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்";
   printable.appendChild(h);
-
   const metaLine = document.createElement("div");
   metaLine.style.textAlign = "center";
   metaLine.style.marginBottom = "8px";
   metaLine.style.color = "#334c67";
   metaLine.textContent = new Date().toLocaleDateString("ta-IN", { year:"numeric", month:"long", day:"numeric" });
   printable.appendChild(metaLine);
-
   list.forEach((it, idx) => {
     const box = document.createElement("div");
     box.className = "pdCard";
@@ -345,26 +310,22 @@ function preparePrintable(list) {
     box.appendChild(mm);
     printable.appendChild(box);
   });
-
   return printable;
 }
-
 async function generatePDF(list) {
   if (!list || !list.length) {
     alert("பதிவிறக்கத்திற்கு போதுமான செய்திகள் இல்லை.");
     return;
   }
   const printable = preparePrintable(list);
-
   // html2pdf options: set margin, filename, and use dpi to improve clarity on mobile
   const opt = {
-    margin:       [10, 10, 10, 10],
-    filename:     `Tamil_News_${new Date().toLocaleDateString('en-CA')}.pdf`,
-    image:        { type: 'jpeg', quality: 0.95 },
-    html2canvas:  { scale: 2, useCORS: true, dpi: 300, letterRendering: 1 },
-    jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
+    margin: [10, 10, 10, 10],
+    filename: `Tamil_News_${new Date().toLocaleDateString('en-CA')}.pdf`,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, dpi: 300, letterRendering: 1 },
+    jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
   };
-
   try {
     await html2pdf().set(opt).from(printable).save();
   } catch (e) {
@@ -375,12 +336,10 @@ async function generatePDF(list) {
     printable.style.display = "none";
   }
 }
-
 /* ============================
    Init & event wiring
    ============================ */
 let latestList = [];
-
 async function init() {
   const play = document.getElementById("playBtn");
   const pause = document.getElementById("pauseBtn");
@@ -390,11 +349,9 @@ async function init() {
   const speedLabel = document.getElementById("speedLabel");
   const pdfBtn = document.getElementById("pdfBtn");
   const refresh = document.getElementById("refreshBtn");
-
   speedRange.addEventListener("input", ()=> {
     speedLabel.textContent = parseFloat(speedRange.value).toFixed(2) + "×";
   });
-
   play.addEventListener("click", ()=> {
     const r = parseFloat(speedRange.value) || 0.95;
     speakAll(r);
@@ -402,14 +359,11 @@ async function init() {
   pause.addEventListener("click", ()=> { window.speechSynthesis.pause(); });
   resume.addEventListener("click", ()=> { window.speechSynthesis.resume(); });
   stop.addEventListener("click", ()=> { window.speechSynthesis.cancel(); });
-
   pdfBtn.addEventListener("click", ()=> generatePDF(latestList));
   refresh.addEventListener("click", ()=> loadAndRender());
-
   // initial load
   await loadAndRender();
 }
-
 async function loadAndRender() {
   document.getElementById("news").innerHTML = "<p style='text-align:center;color:#55616a;'>செய்திகள் தரவிறக்கம் செய்யப்படுகிறது…</p>";
   try {
@@ -420,9 +374,7 @@ async function loadAndRender() {
     document.getElementById("news").innerHTML = "<p style='text-align:center;color:#b33;'>செய்திகளை ஏற்ற வெற்றியில்லை. இணையதளத்தைச் சரிபார்க்கவும்.</p>";
   }
 }
-
 init();
-
 </script>
 </body>
 </html>
