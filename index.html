@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Tamil News – Daily Digest</title>
+
+<style>
+  body{
+    font-family: Arial, sans-serif;
+    margin: 0; padding: 0;
+    background:#f0f7ff;
+  }
+  header{
+    text-align:center;
+    background:#2b6cb0;
+    color:white;
+    padding:15px;
+    font-size:24px;
+    font-weight:bold;
+  }
+  .container{
+    max-width:900px;
+    margin:auto;
+    padding:15px;
+  }
+  .section-title{
+    font-size:20px;
+    margin-top:25px;
+    padding:5px 0;
+    border-bottom:2px solid #2b6cb0;
+    font-weight:bold;
+  }
+  .news-item{
+    background:white;
+    margin:10px 0;
+    padding:10px 15px;
+    border-radius:8px;
+    box-shadow:0 0 5px #ccc;
+  }
+  .news-title{
+    font-size:18px;
+    font-weight:bold;
+  }
+  .news-desc{
+    font-size:15px;
+    margin-top:5px;
+  }
+  .buttons{
+    margin-top:20px;
+    text-align:center;
+  }
+  button{
+    padding:10px 18px;
+    font-size:16px;
+    background:#2b6cb0;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    margin:5px;
+  }
+  button:hover{background:#234e79;}
+</style>
+</head>
+
+<body>
+
+<header>📚 அண்ணா அரசு மாதிரி மேனிலைப்பள்ளி தினச்செய்திகள்</header>
+
+<div class="container">
+
+  <div class="buttons">
+    <button onclick="readAll()">🔊 நிகழ் செய்தியை படிக்க</button>
+    <button onclick="downloadPDF()">📄 PDF பதிவிறக்க</button>
+  </div>
+
+  <div id="news"></div>
+</div>
+
+<script>
+// ======================================
+// STUDENT-FRIENDLY FILTER
+// ======================================
+function filterStudentNews(arr) {
+  const badWords = [
+    "கொலை","கொள்ளை","திருட்டு","வன்முறை","அரசியல்","கும்பல்",
+    "குற்றம்","ரத்த","குண்டு","தாக்குதல்","சண்டை","லஞ்சம்",
+    "அழிவு","விபத்து","சர்ச்சை","தீ","தீவிரவாத", "பாலியல்",
+  ];
+
+  const goodWords = [
+    "கல்வி","மாணவர்கள்","பள்ளி","தேர்வு","விளையாட்டு","வெற்றி",
+    "பதக்கம்","அறிவியல்","தொழில்நுட்பம்","இஸ்ரோ","விண்வெளி",
+    "சுற்றுச்சூழல்","விருது","சாதனை"
+  ];
+
+  return arr.filter(n => {
+    let t = (n.title + " " + n.description).toLowerCase();
+    if (badWords.some(b => t.includes(b))) return false;
+    if (goodWords.some(g => t.includes(g))) return true;
+    return true;
+  });
+}
+
+// ======================================
+// TAMIL NEWS RSS — SCHOOL SAFE
+// ======================================
+const FEEDS = [
+  // Dinamani – Tamil Education & General
+  "https://www.dinamani.com/tamilnadu/feeder/default.rss",
+  "https://www.dinamani.com/education/feeder/default.rss",
+
+  // Vikatan Tamil
+  "https://www.vikatan.com/feeds/?id=2",
+
+  // Daily Thanthi (தினத்தந்தி)
+  "https://www.dailythanthi.com/rss/ta",
+
+  // Tamil Hindu
+  "https://www.thehindu.com/feeder/default.rss"
+];
+
+// ======================================
+// PARSE FEEDS USING Free RSS to JSON API
+// ======================================
+async function loadSingle(url) {
+  try {
+    let r = await fetch("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(url));
+    let j = await r.json();
+    if (!j.items) return [];
+    return j.items.map(it => ({
+      title: it.title || "",
+      description: it.description?.replace(/<[^>]*>/g,"") || "",
+      link: it.link || "",
+      date: it.pubDate || ""
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function loadAll() {
+  let bigList = [];
+  for (let f of FEEDS) {
+    let temp = await loadSingle(f);
+    bigList.push(...temp);
+  }
+
+  // Deduplicate by title
+  let seen = new Set();
+  let uniq = bigList.filter(n=>{
+    if(seen.has(n.title)) return false;
+    seen.add(n.title);
+    return true;
+  });
+
+  // Apply student filter
+  return filterStudentNews(uniq.slice(0, 30));
+}
+
+// ======================================
+// RENDER NEWS
+// ======================================
+function renderNews(arr) {
+  let box = document.getElementById("news");
+  box.innerHTML = "";
+
+  arr.forEach(n=>{
+    let div = document.createElement("div");
+    div.className="news-item";
+    div.innerHTML = `
+      <div class="news-title">${n.title}</div>
+      <div class="news-desc">${n.description}</div>
+      <div style="font-size:13px;margin-top:5px;color:#555;">
+        தேதி: ${new Date(n.date).toLocaleString("ta-IN")}
+      </div>
+    `;
+    box.appendChild(div);
+  });
+}
+
+// ======================================
+// TEXT TO SPEECH
+// ======================================
+function readAll() {
+  let txt = [...document.querySelectorAll(".news-item")]
+    .map(n => n.innerText)
+    .join("\n\n");
+
+  let speech = new SpeechSynthesisUtterance(txt);
+  speech.lang = "ta-IN";
+  window.speechSynthesis.speak(speech);
+}
+
+// ======================================
+// PDF DOWNLOAD
+// ======================================
+function downloadPDF() {
+  let title = "📚 அண்ணா அரசு மாதிரி மேனிலைப்பள்ளி தினச்செய்திகள்\n---------------------------------------------\n\n";
+
+  let content = [...document.querySelectorAll(".news-item")]
+    .map(n => n.innerText)
+    .join("\n\n-------------------------\n\n");
+
+  let finalText = title + content;
+
+  let blob = new Blob([finalText], {type:"text/plain"});
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "TamilNews.txt";
+  a.click();
+  }
+
+// Load News on Start
+loadAll().then(renderNews);
+</script>
+
+</body>
+</html>
