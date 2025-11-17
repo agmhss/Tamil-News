@@ -127,9 +127,11 @@ function render(news) {
 
 // இப்போது PDF 100% ஒரே பக்கத்தில் அழகாக வரும்
 function generatePDF(news) {
+// PDF உருவாக்கும் function (முழுவதுமாக மாற்றவும்)
+function generatePDF(news) {
   const p = document.getElementById("printable");
   p.innerHTML = `
-    <h1>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி, பட்டீஸ்வரம்<br><small style="font-size:16px;color:#222;">தினசரி தமிழ் செய்திகள்</small></h1>
+    <h1>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி<br><small style="font-size:15px;color:#333;">தினசரி தமிழ் செய்திகள்</small></h1>
     <div class="date">${new Date().toLocaleDateString("ta-IN", {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</div>
   `;
 
@@ -142,9 +144,33 @@ function generatePDF(news) {
           <span class="num">${i+1}.</span>
           <strong>${it.title}</strong><br>
           ${it.desc}<br>
-          <small style="color:#666;float:right;">— ${it.source}</small><div style="clear:both;"></div>
+          <small>— ${it.source}</small><div style="clear:both;"></div>
         </div>`;
     });
+  };
+
+  addSec("தமிழ்நாடு செய்திகள்", news.tamilnadu);
+  addSec("தேசிய செய்திகள்", news.national);
+  addSec("உலக செய்திகள்", news.world);
+
+  // தற்காலிகமாக தெரிய வைத்து PDF எடுக்கும்
+  p.style.visibility = "visible";
+  p.style.position = "static";
+  p.style.left = "0";
+
+  const opt = {
+    margin: 0,
+    filename: `தினசரி_செய்தி_${new Date().toLocaleDateString('en-CA')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2.1, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(p).save().then(() => {
+    p.style.position = "absolute";
+    p.style.left = "-9999px";
+    p.style.visibility = "hidden";
+  });
   };
 
   addSec("தமிழ்நாடு செய்திகள்", news.tamilnadu);
