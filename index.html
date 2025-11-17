@@ -23,18 +23,20 @@
   .meta{font-size:12px;color:#7a8a93;}
   a.readmore{color:var(--accent);text-decoration:none;font-weight:600;font-size:13px;}
 
-  /* PDF பகுதி - முழுவதும் ஒரே பக்கத்தில் வர */
+  /* PDF பகுதி - மறைக்கப்பட்டிருக்கும் ஆனால் html2pdf ரெண்டர் செய்யும் */
   #printable{
-    position:absolute;left:-9999px;top:0;width:190mm;padding:14mm 12mm;background:white;
-    font-size:13.8px;line-height:1.52;color:#000;
+    position:absolute !important;left:-9999px !important;top:0 !important;
+    width:180mm;padding:12mm 15mm;background:white;
+    font-size:13.4px;line-height:1.42;color:#000;
     visibility:hidden;display:block !important;
   }
-  #printable h1{font-size:21px;font-weight:700;text-align:center;margin:0 0 8px 0;color:var(--accent);}
-  #printable .date{text-align:center;margin:0 0 20px 0;color:#444;font-weight:600;font-size:14px;}
-  #printable .sec{font-size:17px;font-weight:700;color:var(--accent);margin:22px 0 10px 0;text-align:center;}
-  #printable .pdCard{margin:11px 0;padding:9px;background:#fafcff;border-radius:6px;}
-  #printable .num{font-weight:700;color:var(--accent);margin-right:6px;}
-  #printable strong{font-size:14.2px;}
+  #printable h1{font-size:20px;text-align:center;margin:0 0 6px;color:var(--accent);font-weight:700;}
+  #printable .date{text-align:center;margin:0 0 14px;color:#444;font-size:13.6px;font-weight:600;}
+  #printable .sec{font-size:16.5px;font-weight:700;color:var(--accent);text-align:center;margin:15px 0 6px;}
+  #printable .pdCard{margin:6px 0;padding:6px;background:#fbfbff;border-radius:4px;}
+  #printable .num{font-weight:700;color:var(--accent);margin-right:5px;}
+  #printable strong{font-size:13.7px;}
+  #printable small{color:#555;float:right;font-size:11.8px;}
 </style>
 </head>
 <body>
@@ -44,13 +46,12 @@
 <div class="controls">
   <button id="playBtn">செய்தியை படிக்க</button>
   <button id="pauseBtn" class="ghost">நிறுத்த</button>
-  <button id="stopBtn" class="ghost">நிறுத்து</button>
+  <button id="stopBtn" class="ghost">முழுவதும் நிறுத்து</button>
   <button id="pdfBtn">PDF பதிவிறக்க</button>
   <button id="refreshBtn" class="ghost">புதுப்பி</button>
 </div>
 
 <div id="newsWrap"><div id="news">செய்திகள் ஏற்றப்படுகிறது…</div></div>
-
 <div id="printable"></div>
 
 <script>
@@ -68,7 +69,7 @@ async function fetchFeed(url) {
     const j = await r.json();
     return (j.items || []).map(it => ({
       title: it.title?.trim() || "",
-      desc: (it.description || "").replace(/<\/?[^>]+>/gi, "").replace(/\s+/g," ").trim().substring(0,180) + (it.description.length > 180 ? "…" : ""),
+      desc: (it.description || "").replace(/<\/?[^>]+>/gi, "").replace(/\s+/g," ").trim().substring(0,180) + "…",
       link: it.link,
       date: it.pubDate,
       source: (it.author || new URL(it.link).hostname.replace("www.","").split('.')[0]).toUpperCase()
@@ -78,7 +79,7 @@ async function fetchFeed(url) {
 
 function isStudentFriendly(item) {
   const text = (item.title + " " + item.desc).toLowerCase();
-  const bad = ["கொலை","தற்கொலை","தாக்குதல்","வன்முறை","குண்டு","பாலியல்","அரசியல்","கைது","Head Lines","தலைப்புச்","செய்திகள்","போராட்டம்","விபத்து","ஊழல்","போதை","மரணம்"];
+  const bad = ["கொலை","தற்கொலை","Head Lines","செய்திகள்","தலைப்புச்","தாக்குதல்","வன்முறை","குண்டு","பாலியல்","அரசியல்","கைது","போராட்டம்","விபத்து","ஊழல்","போதை","மரணம்"];
   return !bad.some(w => text.includes(w));
 }
 
@@ -88,7 +89,6 @@ async function loadNews() {
     fetchFeed(FEEDS.national),
     fetchFeed(FEEDS.world)
   ]);
-
   return {
     tamilnadu: tn.filter(isStudentFriendly).slice(0,5),
     national:  nat.filter(isStudentFriendly).slice(0,3),
@@ -102,36 +102,30 @@ function render(news) {
   const createSection = (title, items) => {
     if (!items.length) return;
     const sec = document.createElement("section");
-    const h = document.createElement("div"); h.className = "sectionTitle"; h.textContent = title; sec.appendChild(h);
+    const h = document.createElement("div"); h.className="sectionTitle"; h.textContent=title; sec.appendChild(h);
     items.forEach(it => {
-      const card = document.createElement("article"); card.className = "card";
-      card.innerHTML = `
-        <div class="title">${it.title}</div>
+      const card = document.createElement("article"); card.className="card";
+      card.innerHTML = `<div class="title">${it.title}</div>
         <div class="desc">${it.desc}</div>
         <div class="meta">${it.source} • ${it.date ? new Date(it.date).toLocaleDateString("ta-IN") : ""}</div>
-        <a href="${it.link}" target="_blank" rel="noopener" class="readmore">மேலும் படிக்க ↗</a>
-      `;
+        <a href="${it.link}" target="_blank" rel="noopener" class="readmore">மேலும் படிக்க</a>`;
       sec.appendChild(card);
     });
     wrap.appendChild(sec);
   };
-
   createSection("தமிழ்நாடு செய்திகள்", news.tamilnadu);
   createSection("தேசிய செய்திகள்", news.national);
   createSection("உலக செய்திகள்", news.world);
-
   if (!news.tamilnadu.length && !news.national.length && !news.world.length) {
     wrap.innerHTML = "<p style='text-align:center;color:#b33;padding:30px;'>செய்திகள் கிடைக்கவில்லை. மீண்டும் முயலவும்.</p>";
   }
 }
 
-// இப்போது PDF 100% ஒரே பக்கத்தில் அழகாக வரும்
-function generatePDF(news) {
-// PDF உருவாக்கும் function (முழுவதுமாக மாற்றவும்)
+/* PDF - இப்போது 100% பதிவிறக்கமாகும் + ஒரே பக்கம் */
 function generatePDF(news) {
   const p = document.getElementById("printable");
   p.innerHTML = `
-    <h1>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி<br><small style="font-size:15px;color:#333;">தினசரி தமிழ் செய்திகள்</small></h1>
+    <h1>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி<br>தினசரி தமிழ் செய்திகள்</h1>
     <div class="date">${new Date().toLocaleDateString("ta-IN", {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</div>
   `;
 
@@ -141,8 +135,7 @@ function generatePDF(news) {
     items.forEach((it, i) => {
       p.innerHTML += `
         <div class="pdCard">
-          <span class="num">${i+1}.</span>
-          <strong>${it.title}</strong><br>
+          <span class="num">${i+1}.</span><strong>${it.title}</strong><br>
           ${it.desc}<br>
           <small>— ${it.source}</small><div style="clear:both;"></div>
         </div>`;
@@ -153,7 +146,7 @@ function generatePDF(news) {
   addSec("தேசிய செய்திகள்", news.national);
   addSec("உலக செய்திகள்", news.world);
 
-  // தற்காலிகமாக தெரிய வைத்து PDF எடுக்கும்
+  // தற்காலிகமாக தெரிய வைத்து PDF உருவாக்குதல்
   p.style.visibility = "visible";
   p.style.position = "static";
   p.style.left = "0";
@@ -162,31 +155,7 @@ function generatePDF(news) {
     margin: 0,
     filename: `தினசரி_செய்தி_${new Date().toLocaleDateString('en-CA')}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2.1, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  html2pdf().set(opt).from(p).save().then(() => {
-    p.style.position = "absolute";
-    p.style.left = "-9999px";
-    p.style.visibility = "hidden";
-  });
-  };
-
-  addSec("தமிழ்நாடு செய்திகள்", news.tamilnadu);
-  addSec("தேசிய செய்திகள்", news.national);
-  addSec("உலக செய்திகள்", news.world);
-
-  // PDF உருவாக்கம்
-  p.style.visibility = "visible";
-  p.style.position = "static";
-  p.style.left = "0";
-
-  const opt = {
-    margin: [10, 12, 10, 12],
-    filename: `தினசரி_செய்தி_${new Date().toLocaleDateString('en-CA')}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, letterRendering: true, allowTaint: true, backgroundColor: '#ffffff' },
+    html2canvas: { scale: 2.2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
@@ -197,7 +166,7 @@ function generatePDF(news) {
   });
 }
 
-// TTS
+/* TTS */
 let voices = [];
 window.speechSynthesis.onvoiceschanged = () => { voices = window.speechSynthesis.getVoices(); };
 
@@ -213,7 +182,7 @@ function speak() {
   window.speechSynthesis.speak(u);
 }
 
-// Events
+/* Events */
 let latestNews = {};
 document.getElementById("refreshBtn").onclick = async () => {
   document.getElementById("news").innerHTML = "செய்திகள் ஏற்றப்படுகிறது…";
@@ -225,7 +194,7 @@ document.getElementById("pauseBtn").onclick = () => speechSynthesis.pause();
 document.getElementById("stopBtn").onclick = () => speechSynthesis.cancel();
 document.getElementById("pdfBtn").onclick = () => generatePDF(latestNews);
 
-// முதல் ஏற்றம்
+/* முதல் ஏற்றம் */
 (async () => {
   latestNews = await loadNews();
   render(latestNews);
