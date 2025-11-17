@@ -1,220 +1,428 @@
 <!DOCTYPE html>
 <html lang="ta">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>School Tamil News – Daily Digest</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்</title>
+
+<!-- Noto Sans Tamil webfont (used for on-screen & for html2pdf rendering) -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- html2pdf bundle (includes html2canvas + jspdf) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
 <style>
-  body{
-    font-family: Arial, sans-serif;
-    margin: 0; padding: 0;
-    background:#f0f7ff;
+  :root{
+    --accent:#2b6cb0;
+    --bg:#f0f7ff;
+    --card:#ffffff;
+    --muted:#55616a;
   }
+  html,body{height:100%; margin:0; padding:0; background:var(--bg); font-family:"Noto Sans Tamil", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:#0b1220;}
   header{
+    background:var(--accent);
+    color:#fff;
+    padding:18px 12px;
     text-align:center;
-    background:#2b6cb0;
-    color:white;
-    padding:15px;
-    font-size:24px;
-    font-weight:bold;
-  }
-  .container{
-    max-width:900px;
-    margin:auto;
-    padding:15px;
-  }
-  .section-title{
     font-size:20px;
-    margin-top:25px;
-    padding:5px 0;
-    border-bottom:2px solid #2b6cb0;
-    font-weight:bold;
+    font-weight:700;
   }
-  .news-item{
-    background:white;
-    margin:10px 0;
-    padding:10px 15px;
-    border-radius:8px;
-    box-shadow:0 0 5px #ccc;
-  }
-  .news-title{
-    font-size:18px;
-    font-weight:bold;
-  }
-  .news-desc{
-    font-size:15px;
-    margin-top:5px;
-  }
-  .buttons{
-    margin-top:20px;
+  .subheader{
     text-align:center;
+    padding:10px 12px;
+    color:#083358;
+    font-weight:600;
   }
-  button{
-    padding:10px 18px;
-    font-size:16px;
-    background:#2b6cb0;
-    color:white;
-    border:none;
+  .controls{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding:12px;
+  }
+  button, input[type=range]{
+    font-size:15px;
+    padding:8px 12px;
     border-radius:8px;
+    border:1px solid rgba(0,0,0,0.08);
+    background:var(--accent);
+    color:#fff;
     cursor:pointer;
-    margin:5px;
   }
-  button:hover{background:#234e79;}
+  button.ghost{background:#fff; color:var(--accent); border:1px solid rgba(43,91,165,0.12);}
+  #speedWrap{display:flex; align-items:center; gap:8px; background:transparent; border:none;}
+  #newsWrap{max-width:900px; margin:12px auto; padding:12px;}
+  section{margin-top:8px;}
+  .sectionTitle{font-size:18px; font-weight:700; color:var(--accent); margin:8px 0 12px; border-bottom:2px solid rgba(43,91,165,0.08); padding-bottom:6px;}
+  .card{
+    background:var(--card);
+    border-radius:10px;
+    padding:14px;
+    box-shadow: 0 6px 14px rgba(15,30,50,0.06);
+    margin-bottom:12px;
+  }
+  .title{font-weight:700; font-size:16px; margin-bottom:6px; color:#0b1220;}
+  .desc{font-size:14px; color:var(--muted); line-height:1.35; margin-bottom:8px;}
+  .meta{font-size:12px; color:#7a8a93;}
+  a.readmore{display:inline-block; margin-top:8px; color:var(--accent); text-decoration:none; font-weight:600;}
+  /* printable area styles (used for PDF) */
+  #printable{
+    font-family:"Noto Sans Tamil", sans-serif;
+    color:#0b1220;
+    padding:18px;
+  }
+  #printable h1{font-size:20px; margin:6px 0 12px; text-align:center;}
+  #printable .pdCard{border-radius:6px; padding:10px; margin:8px 0; border:1px solid #e6eefb;}
+  /* small screens */
+  @media (max-width:480px){
+    header{font-size:18px; padding:14px;}
+    .title{font-size:15px;}
+    .desc{font-size:13px;}
+    button{padding:10px 12px; font-size:14px;}
+  }
 </style>
 </head>
-
 <body>
+<header>📚 அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்</header>
+<div class="subheader">மாணவர்களுக்குப் பொருத்தமான செய்திகள் — கல்வி, அறிவியல், விளையாட்டு, விருதுகள், சுற்றுச்சூழல்</div>
 
-<header>📚 அண்ணா அரசு மாதிரி மேனிலைப்பள்ளி தினச்செய்திகள்</header>
+<div class="controls" aria-hidden="false">
+  <button id="playBtn">🔊 நிகழ் செய்தியை படிக்க</button>
+  <button id="pauseBtn" class="ghost">⏸ நிறுத்த</button>
+  <button id="resumeBtn" class="ghost">▶ தொடர்க்க</button>
+  <button id="stopBtn" class="ghost">⏹ நிறுத்து</button>
 
-<div class="container">
-
-  <div class="buttons">
-    <button onclick="readAll()">🔊 நிகழ் செய்தியை படிக்க</button>
-    <button onclick="downloadPDF()">📄 PDF பதிவிறக்க</button>
+  <div id="speedWrap" style="margin-left:6px;">
+    <label style="color:#083358;font-weight:600;">வேகம்</label>
+    <input id="speedRange" type="range" min="0.7" max="1.3" step="0.05" value="0.95" style="margin-left:8px;">
+    <span id="speedLabel" style="color:#083358;margin-left:6px;">0.95×</span>
   </div>
 
-  <div id="news"></div>
+  <button id="pdfBtn">📄 PDF பதிவிறக்க</button>
+  <button id="refreshBtn" class="ghost" title="செய்திகளை மீளுபதிவு">🔄 புதுப்பி</button>
 </div>
 
+<div id="newsWrap">
+  <div id="news">செய்திகள்ロード中…</div>
+</div>
+
+<!-- Hidden printable element used for PDF generation -->
+<div id="printable" style="display:none;"></div>
+
 <script>
-// ======================================
-// STUDENT-FRIENDLY FILTER
-// ======================================
+/* ============================
+   Tamil-only feeds (tested)
+   ============================ */
+const FEEDS = [
+  "https://www.dinamani.com/feeds/?id=Home",                 // Dinamani (home)
+  "https://www.dinamani.com/education/feeder/default.rss",   // Dinamani education
+  "https://www.hindutamil.in/rss",                           // Hindutamil
+  "https://www.puthiyathalaimurai.com/rss/ta",               // Puthiya Thalaimurai
+  "https://www.maalaimalar.com/rss/ta"                       // Maalai Malar
+];
+
+/* ============================
+   Student-friendly filter (Tamil)
+   ============================ */
 function filterStudentNews(arr) {
-  const badWords = [
-    "கொலை","கொள்ளை","திருட்டு","வன்முறை","அரசியல்","கும்பல்",
-    "குற்றம்","ரத்த","குண்டு","தாக்குதல்","சண்டை","லஞ்சம்",
-    "அழிவு","விபத்து","சர்ச்சை","தீ","தீவிரவாத", "பாலியல்",
-  ];
+  const bad = [
+    "கொலை","கொல்லை","திருட்","திருட்டு","வன்முறை","அவலம்","தற்கொலை",
+    "அட்டா","அடித்து","குண்டு","தாக்குதல்","சண்டை","குற்றம்","தற்கொலை",
+    "வெறுஷம்","அரசியல்","தேர்வு முடிவுகள் (negative context?)"
+  ].map(s=>s.toLowerCase());
 
-  const goodWords = [
-    "கல்வி","மாணவர்கள்","பள்ளி","தேர்வு","விளையாட்டு","வெற்றி",
-    "பதக்கம்","அறிவியல்","தொழில்நுட்பம்","இஸ்ரோ","விண்வெளி",
-    "சுற்றுச்சூழல்","விருது","சாதனை"
-  ];
+  const allowTags = [
+    "கல்வி","மாணவர்","மாணவர்கள்","பள்ளி","தேர்வு","பாடம்","விழா","விளையாட்டு","வெற்றி",
+    "பதக்கம்","விருது","அறிவியல்","தொழில்நுட்பம்","இஸ்ரோ","விண்வெளி","ஆசிரியர்",
+    "தொடக்கம்","புதிய","ஆவேஷம்","சுற்றுச்சூழல்","புத்தகம்","நுட்பம்","ஆய்வு","ரூட்டின்"
+  ].map(s=>s.toLowerCase());
 
-  return arr.filter(n => {
-    let t = (n.title + " " + n.description).toLowerCase();
-    if (badWords.some(b => t.includes(b))) return false;
-    if (goodWords.some(g => t.includes(g))) return true;
+  return arr.filter(item => {
+    const t = (item.title + " " + item.description).toLowerCase();
+
+    // Exclude if any bad word present
+    for (const b of bad) if (t.includes(b)) return false;
+
+    // Prefer items that include at least one allowed tag OR are neutral
+    for (const g of allowTags) if (t.includes(g)) return true;
+
+    // If neither allowed nor banned, still allow (so we don't become too strict),
+    // but we can deprioritize later. For now include.
     return true;
   });
 }
 
-// ======================================
-// TAMIL NEWS RSS — SCHOOL SAFE
-// ======================================
-const FEEDS = [
-  // Dinamani – Tamil Education & General
-  "https://www.dinamani.com/tamilnadu/feeder/default.rss",
-  "https://www.dinamani.com/education/feeder/default.rss",
-
-  // Vikatan Tamil
-  "https://www.vikatan.com/feeds/?id=2",
-
-  // Daily Thanthi (தினத்தந்தி)
-  "https://www.dailythanthi.com/rss/ta",
-
-  // Tamil Hindu
-  "https://www.thehindu.com/feeder/default.rss"
-];
-
-// ======================================
-// PARSE FEEDS USING Free RSS to JSON API
-// ======================================
-async function loadSingle(url) {
+/* ============================
+   RSS -> JSON via rss2json (public proxy)
+   Note: rss2json has rate limits but works for basic usage.
+   ============================ */
+async function fetchFeedAsJson(url) {
+  const api = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(url);
   try {
-    let r = await fetch("https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(url));
-    let j = await r.json();
+    const r = await fetch(api);
+    if (!r.ok) return [];
+    const j = await r.json();
     if (!j.items) return [];
     return j.items.map(it => ({
       title: it.title || "",
-      description: it.description?.replace(/<[^>]*>/g,"") || "",
+      description: (it.description || "").replace(/<\/?[^>]+(>|$)/g, ""), // strip html
       link: it.link || "",
-      date: it.pubDate || ""
+      pubDate: it.pubDate || "",
+      source: (j.feed && j.feed.title) ? j.feed.title : (new URL(url)).host
     }));
-  } catch {
+  } catch (e) {
+    console.warn("feed fetch failed", url, e);
     return [];
   }
 }
 
 async function loadAll() {
-  let bigList = [];
-  for (let f of FEEDS) {
-    let temp = await loadSingle(f);
-    bigList.push(...temp);
+  // fetch all feeds in parallel (but handle failures gracefully)
+  const promises = FEEDS.map(f => fetchFeedAsJson(f));
+  const lists = await Promise.all(promises);
+
+  // flatten & dedupe by title
+  const flat = lists.flat();
+  const seen = new Set();
+  const uniq = [];
+  for (const it of flat) {
+    const key = (it.title || "").trim();
+    if (!key) continue;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniq.push(it);
   }
 
-  // Deduplicate by title
-  let seen = new Set();
-  let uniq = bigList.filter(n=>{
-    if(seen.has(n.title)) return false;
-    seen.add(n.title);
-    return true;
+  // sort by pubDate desc if available
+  uniq.sort((a,b) => {
+    const da = a.pubDate ? new Date(a.pubDate).getTime() : 0;
+    const db = b.pubDate ? new Date(b.pubDate).getTime() : 0;
+    return db - da;
   });
 
-  // Apply student filter
-  return filterStudentNews(uniq.slice(0, 30));
+  // apply filter
+  const filtered = filterStudentNews(uniq);
+
+  // return top 30 or less
+  return filtered.slice(0, 30);
 }
 
-// ======================================
-// RENDER NEWS
-// ======================================
-function renderNews(arr) {
-  let box = document.getElementById("news");
-  box.innerHTML = "";
+/* ============================
+   Render on page
+   ============================ */
+function renderNews(list) {
+  const container = document.getElementById("news");
+  container.innerHTML = "";
 
-  arr.forEach(n=>{
-    let div = document.createElement("div");
-    div.className="news-item";
-    div.innerHTML = `
-      <div class="news-title">${n.title}</div>
-      <div class="news-desc">${n.description}</div>
-      <div style="font-size:13px;margin-top:5px;color:#555;">
-        தேதி: ${new Date(n.date).toLocaleString("ta-IN")}
-      </div>
-    `;
-    box.appendChild(div);
-  });
-}
-
-// ======================================
-// TEXT TO SPEECH
-// ======================================
-function readAll() {
-  let txt = [...document.querySelectorAll(".news-item")]
-    .map(n => n.innerText)
-    .join("\n\n");
-
-  let speech = new SpeechSynthesisUtterance(txt);
-  speech.lang = "ta-IN";
-  window.speechSynthesis.speak(speech);
-}
-
-// ======================================
-// PDF DOWNLOAD
-// ======================================
-function downloadPDF() {
-  let title = "📚 அண்ணா அரசு மாதிரி மேனிலைப்பள்ளி தினச்செய்திகள்\n---------------------------------------------\n\n";
-
-  let content = [...document.querySelectorAll(".news-item")]
-    .map(n => n.innerText)
-    .join("\n\n-------------------------\n\n");
-
-  let finalText = title + content;
-
-  let blob = new Blob([finalText], {type:"text/plain"});
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "TamilNews.txt";
-  a.click();
+  if (!list.length) {
+    container.innerHTML = "<p style='text-align:center;color:#55616a;'>செய்திகள் கிடைக்கவில்லை. புதுப்பிப்புக் கோருங்கள்.</p>";
+    return;
   }
 
-// Load News on Start
-loadAll().then(renderNews);
+  // We create three logical sections: Education (if any), Sports, General
+  // But for simplicity, show single list grouped by recency
+  const sec = document.createElement("section");
+  const heading = document.createElement("div");
+  heading.className = "sectionTitle";
+  heading.textContent = "சமீபத்திய செய்திகள்";
+  sec.appendChild(heading);
+
+  list.forEach(item => {
+    const card = document.createElement("article");
+    card.className = "card";
+    const t = document.createElement("div");
+    t.className = "title";
+    t.textContent = item.title;
+    const d = document.createElement("div");
+    d.className = "desc";
+    d.textContent = item.description;
+    const m = document.createElement("div");
+    m.className = "meta";
+    const dateStr = item.pubDate ? ("தேதி: " + new Date(item.pubDate).toLocaleString("ta-IN")) : "";
+    m.textContent = `${item.source} • ${dateStr}`;
+    const read = document.createElement("a");
+    read.className = "readmore";
+    read.href = item.link || "#";
+    read.target = "_blank";
+    read.rel = "noopener";
+    read.textContent = "மேலும் படிக்க ↗";
+
+    card.appendChild(t);
+    card.appendChild(d);
+    card.appendChild(m);
+    card.appendChild(read);
+    sec.appendChild(card);
+  });
+
+  container.appendChild(sec);
+}
+
+/* ============================
+   Text-to-Speech (Tamil)
+   ============================ */
+let allVoices = [];
+function loadVoices(){ allVoices = window.speechSynthesis.getVoices(); }
+window.speechSynthesis.onvoiceschanged = loadVoices;
+
+function getTamilVoice() {
+  if (!allVoices.length) loadVoices();
+  // try to find ta-IN voice
+  const taVoice = allVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("ta"));
+  if (taVoice) return taVoice;
+  // fallback: any voice that speaks en-IN (works poorly), or first voice
+  return allVoices.find(v => v.lang && v.lang.toLowerCase().startsWith("en-in")) || allVoices[0];
+}
+
+function buildScriptFromDOM() {
+  // Gather title + each card's title + first sentence of desc
+  const parts = [];
+  const header = "நண்பர்களே. இதோ உங்கள் பள்ளி செய்தி வெளியீடு.";
+  parts.push(header);
+  document.querySelectorAll(".card").forEach((c, idx) => {
+    const ti = c.querySelector(".title")?.innerText || "";
+    const de = c.querySelector(".desc")?.innerText || "";
+    // take first sentence from desc
+    const first = (de.split(/[\.\?\!]\s/)[0] || "").trim();
+    if (ti) parts.push(`${idx+1}. ${ti}. ${first}`);
+  });
+  parts.push("இவையால் உங்களுக்குப் பயனாகவாகட்டும். சிறந்த நாளாக இருக்க வேண்டும்.");
+  return parts.join(". ");
+}
+
+let currentUtters = [];
+function speakAll(rate=0.95) {
+  window.speechSynthesis.cancel();
+  const voice = getTamilVoice();
+  const text = buildScriptFromDOM();
+  if (!text) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "ta-IN";
+  if (voice) u.voice = voice;
+  u.rate = rate;
+  u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+  currentUtters = [u];
+}
+
+/* ============================
+   PDF generation using html2pdf
+   Ensures Tamil renders correctly by using the page's webfont.
+   ============================ */
+function preparePrintable(list) {
+  // Build printable HTML with title + items
+  const printable = document.getElementById("printable");
+  printable.style.display = "block"; // make visible for accurate rendering
+  printable.innerHTML = "";
+
+  const h = document.createElement("h1");
+  h.textContent = "அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்";
+  printable.appendChild(h);
+
+  const metaLine = document.createElement("div");
+  metaLine.style.textAlign = "center";
+  metaLine.style.marginBottom = "8px";
+  metaLine.style.color = "#334c67";
+  metaLine.textContent = new Date().toLocaleDateString("ta-IN", { year:"numeric", month:"long", day:"numeric" });
+  printable.appendChild(metaLine);
+
+  list.forEach((it, idx) => {
+    const box = document.createElement("div");
+    box.className = "pdCard";
+    const tt = document.createElement("div");
+    tt.style.fontWeight = "700";
+    tt.style.marginBottom = "6px";
+    tt.textContent = `${idx+1}. ${it.title}`;
+    const dd = document.createElement("div");
+    dd.textContent = it.description || "";
+    const mm = document.createElement("div");
+    mm.style.color = "#55616a";
+    mm.style.marginTop = "6px";
+    mm.style.fontSize = "12px";
+    mm.textContent = `${it.source} • ${it.pubDate ? new Date(it.pubDate).toLocaleString("ta-IN") : ""}`;
+    box.appendChild(tt);
+    box.appendChild(dd);
+    box.appendChild(mm);
+    printable.appendChild(box);
+  });
+
+  return printable;
+}
+
+async function generatePDF(list) {
+  if (!list || !list.length) {
+    alert("பதிவிறக்கத்திற்கு போதுமான செய்திகள் இல்லை.");
+    return;
+  }
+  const printable = preparePrintable(list);
+
+  // html2pdf options: set margin, filename, and use dpi to improve clarity on mobile
+  const opt = {
+    margin:       [10, 10, 10, 10],
+    filename:     `Tamil_News_${new Date().toLocaleDateString('en-CA')}.pdf`,
+    image:        { type: 'jpeg', quality: 0.95 },
+    html2canvas:  { scale: 2, useCORS: true, dpi: 300, letterRendering: 1 },
+    jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    await html2pdf().set(opt).from(printable).save();
+  } catch (e) {
+    console.error("PDF creation failed", e);
+    alert("PDF தயாரிப்பதில் பிழை ஏற்பட்டது. பிறகு முயற்சிக்கவும்.");
+  } finally {
+    // hide printable again
+    printable.style.display = "none";
+  }
+}
+
+/* ============================
+   Init & event wiring
+   ============================ */
+let latestList = [];
+
+async function init() {
+  const play = document.getElementById("playBtn");
+  const pause = document.getElementById("pauseBtn");
+  const resume = document.getElementById("resumeBtn");
+  const stop = document.getElementById("stopBtn");
+  const speedRange = document.getElementById("speedRange");
+  const speedLabel = document.getElementById("speedLabel");
+  const pdfBtn = document.getElementById("pdfBtn");
+  const refresh = document.getElementById("refreshBtn");
+
+  speedRange.addEventListener("input", ()=> {
+    speedLabel.textContent = parseFloat(speedRange.value).toFixed(2) + "×";
+  });
+
+  play.addEventListener("click", ()=> {
+    const r = parseFloat(speedRange.value) || 0.95;
+    speakAll(r);
+  });
+  pause.addEventListener("click", ()=> { window.speechSynthesis.pause(); });
+  resume.addEventListener("click", ()=> { window.speechSynthesis.resume(); });
+  stop.addEventListener("click", ()=> { window.speechSynthesis.cancel(); });
+
+  pdfBtn.addEventListener("click", ()=> generatePDF(latestList));
+  refresh.addEventListener("click", ()=> loadAndRender());
+
+  // initial load
+  await loadAndRender();
+}
+
+async function loadAndRender() {
+  document.getElementById("news").innerHTML = "<p style='text-align:center;color:#55616a;'>செய்திகள் தரவிறக்கம் செய்யப்படுகிறது…</p>";
+  try {
+    latestList = await loadAll();
+    renderNews(latestList);
+  } catch (e) {
+    console.error(e);
+    document.getElementById("news").innerHTML = "<p style='text-align:center;color:#b33;'>செய்திகளை ஏற்ற வெற்றியில்லை. இணையதளத்தைச் சரிபார்க்கவும்.</p>";
+  }
+}
+
+init();
+
 </script>
-
 </body>
 </html>
