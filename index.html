@@ -1,119 +1,209 @@
 <!DOCTYPE html>
 <html lang="ta">
 <head>
-<meta charset="utf-8">
-<title>அண்ணா அரசு பள்ளி - தினசரி செய்தி</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-  body{font-family:'Noto Sans Tamil',sans-serif;background:#f0f7ff;margin:0;padding:0}
-  header{background:#1e40af;color:#fff;padding:20px;text-align:center;font-size:21px;font-weight:700}
-  .btn{padding:12px 20px;margin:8px;border:none;border-radius:8px;background:#1d4ed8;color:#fff;font-size:16px;cursor:pointer}
-  .btn2{background:#fff;color:#1d4ed8;border:2px solid #1d4ed8}
-  #news{padding:15px;max-width:900px;margin:auto}
-  .sec{margin:25px 0 10px;font-size:19px;font-weight:700;color:#1d4ed8;text-align:center}
-  .card{background:#fff;padding:16px;border-radius:12px;margin-bottom:16px;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
-  .title{font-size:16.5px;font-weight:700;margin-bottom:8px}
-  .desc{line-height:1.5;color:#333}
-
-/* மிக முக்கியமான தீர்வு — இதனால்தான் blank வந்தது */
-#printable {
-  position:fixed;top:0;left:0;width:210mm;height:297mm;
-  background:white;padding:18mm 15mm;
-  font-size:14px;line-height:1.45;
-  transform:scale(1);transform-origin:0 0;
-  opacity:1 !important;visibility:visible !important;
-}
+  :root{--accent:#2b6cb0;--bg:#f0f7ff;--card:#ffffff;--muted:#55616a;}
+  html,body{margin:0;padding:0;background:var(--bg);font-family:"Noto Sans Tamil",sans-serif;color:#0b1220;}
+  header{background:var(--accent);color:#fff;padding:18px 12px;text-align:center;font-size:20px;font-weight:700;}
+  .subheader{text-align:center;padding:10px 12px;color:#083358;font-weight:600;}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:12px;}
+  button{font-size:15px;padding:8px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer;}
+  button.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent);}
+  #newsWrap{max-width:900px;margin:12px auto;padding:12px;}
+  .sectionTitle{font-size:19px;font-weight:700;color:var(--accent);margin:20px 0 12px;padding-bottom:6px;border-bottom:2px solid rgba(43,91,165,0.2);}
+  .card{background:var(--card);border-radius:10px;padding:15px;box-shadow:0 4px 12px rgba(15,30,50,0.08);margin-bottom:14px;}
+  .title{font-weight:700;font-size:16px;margin-bottom:6px;line-height:1.3;}
+  .desc{font-size:14.5px;color:var(--muted);line-height:1.45;}
+  .meta{font-size:12px;color:#7a8a93;}
+  a.readmore{color:var(--accent);text-decoration:none;font-weight:600;font-size:13px;}
+  /* PDF area – மறைக்கப்பட்டிருக்கும் ஆனால் PDF-க்கு தேவைப்படும் போது தெரியும் */
+  #printable{
+    position:absolute;left:-9999px;top:0;width:210mm;padding:15mm;background:white;
+    font-size:10.5px;line-height:1.55;display:block !important;visibility:hidden;
+  }
+  #printable h1{font-size:16px;text-align:center;margin-bottom:8px;}
+  #printable .date{text-align:center;color:#444;margin-bottom:20px;font-weight:600;}
+  #printable .sec{font-size:12px;font-weight:700;color:var(--accent);margin:10px 0 10px;border-bottom:2px solid var(--accent);padding-bottom:5px;}
+  #printable .pdCard{margin:8px 0;padding:8px;border-left:3px solid var(--accent);background:#f8fbff;}
+  #printable .num{font-weight:700;color:var(--accent);}
 </style>
 </head>
 <body>
-<header>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி, பட்டீஸ்வரம்<br><small>தினசரி தமிழ் செய்திகள்</small></header>
+<header>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி — தினசரி தமிழ் செய்திகள்</header>
+<div class="subheader">மாணவர்களுக்கான முக்கிய செய்திகள் (10 மட்டும்)</div>
 
-<div style="text-align:center;padding:10px">
-  <button class="btn" id="pdfBtn">PDF பதிவிறக்கு</button>
-  <button class="btn btn2" id="refreshBtn">புதுப்பி</button>
+<div class="controls">
+  <button id="playBtn">நிகழ் செய்தியை படிக்க</button>
+  <button id="pauseBtn" class="ghost">நிறுத்த</button>
+  <button id="stopBtn" class="ghost">முழுவதும் நிறுத்து</button>
+  <button id="pdfBtn">PDF பதிவிறக்க</button>
+  <button id="refreshBtn" class="ghost">புதுப்பி</button>
 </div>
 
-<div id="news">செய்திகள் ஏற்றப்படுகிறது…</div>
+<div id="newsWrap"><div id="news">செய்திகள் ஏற்றப்படுகிறது…</div></div>
 
-<!-- இதுதான் PDF-க்கு உள்ளே போகும் உண்மையான பக்கம் -->
+<!-- இந்த div திரைக்கு வெளியே இருக்கும், ஆனால் PDF-க்கு தெரியும் -->
 <div id="printable"></div>
 
 <script>
-async function getFeed(url){
-  try{
-    const r=await fetch("https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(url));
-    if(!r.ok) return [];
-    const j=await r.json();
-    return j.items.map(x=>({
-      title:x.title||"",
-      desc:(x.description||"").replace(/<[^>]*>/g,"").replace(/\s+/g," ").trim().substring(0,190)+"…",
-      source:(new URL(x.link).hostname.replace("www.","").split(".")[0]).toUpperCase()
+const FEEDS = {
+  tamilnadu: "https://news.google.com/rss/search?q=when:24h+தமிழ்நாடு+செய்தி&hl=ta&gl=IN&ceid=IN:ta",
+  national:  "https://news.google.com/rss/search?q=when:24h+இந்தியா+செய்தி+-%E0%AE%A4%E0%AE%AE%E0%AE%BF%E0%AE%B4%E0%AF%8D%E0%AE%A8%E0%AE%BE%E0%AE%9F%E0%AF%81&hl=ta&gl=IN&ceid=IN:ta",
+  world:     "https://news.google.com/rss/search?q=when:24h+உலக+செய்தி&hl=ta&gl=IN&ceid=IN:ta"
+};
+
+async function fetchFeed(url) {
+  const proxy = "https://api.rss2json.com/v1/api.json?rss_url=" + encodeURIComponent(url);
+  try {
+    const r = await fetch(proxy);
+    if (!r.ok) return [];
+    const j = await r.json();
+    return (j.items || []).map(it => ({
+      title: it.title?.trim() || "",
+      desc: (it.description || "").replace(/<\/?[^>]+>/gi, "").replace(/\s+/g," ").trim(),
+      link: it.link,
+      date: it.pubDate,
+      source: it.author || new URL(it.link).hostname.replace("www.","").split('.')[0]
     }));
-  }catch(e){return []}
+  } catch(e) { console.warn("Feed failed:", url); return []; }
 }
 
-async function load(){
+function isStudentFriendly(item) {
+  const text = (item.title + " " + item.desc).toLowerCase();
+  const bad = ["கொலை","தற்கொலை","தாக்குதல்","வன்முறை","குண்டு","பாலியல்","அரசியல்","கைது","போராட்டம்","விபத்து","Head Lines","செய்திகள்","தலைப்புச்","ஊழல்","போதை"];
+  if (bad.some(w => text.includes(w))) return false;
+  return true;
+}
+
+async function loadNews() {
   const [tn, nat, intl] = await Promise.all([
-    getFeed("https://news.google.com/rss/search?q=when:24h+தமிழ்நாடு+செய்தி&hl=ta&gl=IN&ceid=IN:ta"),
-    getFeed("https://news.google.com/rss/search?q=when:24h+இந்தியா+செய்தி+-%E0%AE%A4%E0%AE%AE%E0%AE%BF%E0%AE%B4%E0%AF%8D%E0%AE%A8%E0%AE%BE%E0%AE%9F%E0%AF%81&hl=ta&gl=IN&ceid=IN:ta"),
-    getFeed("https://news.google.com/rss/search?q=when:24h+உலக+செய்தி&hl=ta&gl=IN&ceid=IN:ta")
+    fetchFeed(FEEDS.tamilnadu),
+    fetchFeed(FEEDS.national),
+    fetchFeed(FEEDS.world)
   ]);
 
-  const good = arr => arr.filter(x=>{
-    const t=(x.title+" "+x.desc).toLowerCase();
-    const bad=["கொலை","தற்கொலை","தாக்குதல்","வன்முறை","பாலியல்","அரசியல்","கைது","போராட்டம்","விபத்து","மரணம்"];
-    return !bad.some(w=>t.includes(w));
-  });
-
   return {
-    tn: good(tn).slice(0,5),
-    nat: good(nat).slice(0,3),
-    intl: good(intl).slice(0,2)
+    tamilnadu: tn.filter(isStudentFriendly).slice(0,5),
+    national:  nat.filter(isStudentFriendly).slice(0,3),
+    world:     intl.filter(isStudentFriendly).slice(0,2)
   };
 }
 
-function show(data){
-  const n=document.getElementById("news"); n.innerHTML="";
-  const sec=(t,a)=>{if(a.length){n.innerHTML+=`<div class="sec">${t}</div>`;a.forEach(x=>{n.innerHTML+=`<div class="card"><div class="title">${x.title}</div><div class="desc">${x.desc}</div><small style="color:#666;float:right">— ${x.source}</small><div style="clear:both"></div></div>`})}}
-  sec("தமிழ்நாடு செய்திகள்",data.tn);
-  sec("தேசிய செய்திகள்",data.nat);
-  sec("உலக செய்திகள்",data.intl);
+function render(news) {
+  const wrap = document.getElementById("news");
+  wrap.innerHTML = "";
+  if (!news.tamilnadu.length && !news.national.length && !news.world.length) {
+    wrap.innerHTML = "<p style='text-align:center;color:#b33;'>செய்திகள் கிடைக்கவில்லை. மீண்டும் முயலவும்.</p>";
+    return;
+  }
+
+  const createSection = (title, items) => {
+    if (!items.length) return;
+    const sec = document.createElement("section");
+    const h = document.createElement("div"); h.className = "sectionTitle"; h.textContent = title; sec.appendChild(h);
+    items.forEach(it => {
+      const card = document.createElement("article"); card.className = "card";
+      card.innerHTML = `
+        <div class="title">${it.title}</div>
+        <div class="desc">${it.desc}</div>
+        <div class="meta">${it.source} • ${it.date ? new Date(it.date).toLocaleDateString("ta-IN") : ""}</div>
+        <a href="${it.link}" target="_blank" rel="noopener" class="readmore">மேலும் படிக்க ↗</a>
+      `;
+      sec.appendChild(card);
+    });
+    wrap.appendChild(sec);
+  };
+
+  createSection("தமிழ்நாடு செய்திகள்", news.tamilnadu);
+  createSection("தேசிய செய்திகள்", news.national);
+  createSection("உலக செய்திகள்", news.world);
 }
 
-/* இந்த function மட்டும் சரியாக இருந்தால் PDF blank வரவே வராது */
-function createPDF(data){
-  const p=document.getElementById("printable");
+// PDF – இப்போது உறுதியாக வேலை செய்யும்
+function generatePDF(news) {
+  const p = document.getElementById("printable");
   p.innerHTML = `
-    <h1 style="text-align:center;color:#1d4ed8;font-size:22px;margin-bottom:8px">
-      அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி<br>தினசரி தமிழ் செய்திகள்
-    </h1>
-    <div style="text-align:center;margin-bottom:20px;color:#444;font-weight:600">
-      ${new Date().toLocaleDateString("ta-IN",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
-    </div>`;
+    <h1>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி<br>தினசரி தமிழ் செய்திகள்</h1>
+    <div class="date">${new Date().toLocaleDateString("ta-IN", {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</div>
+  `;
 
-  const add=(title,list)=>{if(list.length){p.innerHTML+=`<div style="font-size:17px;font-weight:700;color:#1d4ed8;text-align:center;margin:18px 0 8px">${title}</div>`;list.forEach((x,i)=>{p.innerHTML+=`<div style="margin:10px 0"><span style="font-weight:700;color:#1d4ed8">${i+1}.</span> <strong>${x.title}</strong><br>${x.desc}<br><small style="float:right;color:#666">— ${x.source}</small><div style="clear:both"></div></div>`})}}
-  add("தமிழ்நாடு செய்திகள்",data.tn);
-  add("தேசிய செய்திகள்",data.nat);
-  add("உலக செய்திகள்",data.intl);
+  const addSec = (title, items) => {
+    if (!items.length) return;
+    p.innerHTML += `<div class="sec">${title}</div>`;
+    items.forEach((it, i) => {
+      p.innerHTML += `
+        <div class="pdCard">
+          <span class="num">${i+1}.</span> <strong>${it.title}</strong><br>
+          ${it.desc}<br>
+          <small style="color:#666;">— ${it.source}</small>
+        </div>`;
+    });
+  };
 
-  // இதுதான் ரகசியம் — html2pdf க்கு உண்மையான visible element கொடுக்க வேண்டும்
-  html2pdf().set({
-    margin:0,
-    filename:`தினசரி_செய்தி_${new Date().toLocaleDateString('en-CA')}.pdf`,
-    html2canvas:{scale:2.5, useCORS:true, letterRendering:true},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
-  }).from(p).save();
+  addSec("தமிழ்நாடு செய்திகள்", news.tamilnadu);
+  addSec("தேசிய செய்திகள்", news.national);
+  addSec("உலக செய்திகள்", news.world);
+
+  // மிக முக்கியமான திருத்தம் – visibility மட்டும் மறைக்கப்படும், display:none இல்லை
+  p.style.visibility = "visible";
+  p.style.position = "static";
+  p.style.left = "0";
+
+  const opt = {
+    margin: [10, 12, 10, 12],
+    filename: `தினசரி_செய்தி_${new Date().toLocaleDateString('en-CA')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true, allowTaint: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  html2pdf().set(opt).from(p).save().then(() => {
+    // PDF எடுத்த பிறகு மறுபடியும் மறை
+    p.style.position = "absolute";
+    p.style.left = "-9999px";
+    p.style.visibility = "hidden";
+  });
 }
 
-let newsData={tn:[],nat:[],intl:[]};
+// TTS
+let voices = [];
+window.speechSynthesis.onvoiceschanged = () => { voices = window.speechSynthesis.getVoices(); };
 
-document.getElementById("refreshBtn").onclick=async()=>{document.getElementById("news").innerHTML="செய்திகள் ஏற்றப்படுகிறது…";newsData=await load();show(newsData);}
-document.getElementById("pdfBtn").onclick=()=>{createPDF(newsData);}
+function speak() {
+  window.speechSynthesis.cancel();
+  const titles = Array.from(document.querySelectorAll('.title')).map(t => t.textContent).join(". ");
+  const text = "நண்பர்களே, இன்றைய முக்கிய செய்திகள். " + titles + ". இவை உங்களுக்கு பயனுள்ளதாக இருக்கும் என்று நம்புகிறோம்.";
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "ta-IN";
+  const voice = voices.find(v => v.lang.startsWith("ta")) || voices[0];
+  if (voice) utter.voice = voice;
+  utter.rate = 0.95;
+  window.speechSynthesis.speak(utter);
+}
 
-// தொடக்கத்தில் ஒரு முறை ஏற்று
-(async()=>{newsData=await load();show(newsData);})();
+// Events
+let latestNews = {};
+document.getElementById("refreshBtn").onclick = async () => {
+  document.getElementById("news").innerHTML = "செய்திகள் ஏற்றப்படுகிறது…";
+  latestNews = await loadNews();
+  render(latestNews);
+};
+document.getElementById("playBtn").onclick = speak;
+document.getElementById("pauseBtn").onclick = () => speechSynthesis.pause();
+document.getElementById("stopBtn").onclick = () => speechSynthesis.cancel();
+document.getElementById("pdfBtn").onclick = () => generatePDF(latestNews);
+
+// முதல் முறை ஏற்றம்
+(async () => {
+  latestNews = await loadNews();
+  render(latestNews);
+})();
 </script>
 </body>
 </html>
