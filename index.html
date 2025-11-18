@@ -78,7 +78,7 @@ async function fetchFeed(url) {
 
 function isStudentFriendly(item) {
   const text = (item.title + " " + item.desc).toLowerCase();
-  const bad = ["கொலை","தற்கொலை","தாக்குதல்","வன்முறை","குண்டு","Head Lines","தலைப்புச்","பாலியல்","அரசியல்","கைது","போராட்டம்","விபத்து","ஊழல்","போதை","மரணம்"];
+  const bad = ["கொலை","தற்கொலை","தாக்குதல்","வன்முறை","குண்டு","Head Lines","தலைப்புச்","செய்திகள்","பாலியல்","அரசியல்","கைது","போராட்டம்","விபத்து","ஊழல்","போதை","மரணம்"];
   return !bad.some(w => text.includes(w));
 }
 
@@ -129,7 +129,7 @@ function render(news) {
 function generatePDF(news) {
   const p = document.getElementById("printable");
   p.innerHTML = `
-    <h1>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி<br><small style="font-size:16px;color:#222;">தினசரி தமிழ் செய்திகள்</small></h1>
+    <h1>அண்ணா அரசு மாதிரி மேல்நிலை பள்ளி, பட்டீஸ்வரம்<br><small style="font-size:16px;color:#222;">இன்றைய செய்திகள்</small></h1>
     <div class="date">${new Date().toLocaleDateString("ta-IN", {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</div>
   `;
 
