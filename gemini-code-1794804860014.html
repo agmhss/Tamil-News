@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AGMHSS தினசரி செய்திகள்</title>
+<!-- html2pdf handles Tamil Unicode fonts cleanly in PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #991b1b;
+    --primary-light: #dc2626;
+    --bg: #fffaf5;
+    --card-bg: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+    --accent-schedule: #0d9488;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Noto Sans Tamil", "Latha", "Vijaya", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+    padding: 18px 15px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 23px;
+    letter-spacing: 0.3px;
+  }
+  header .date-sub {
+    font-size: 14px;
+    opacity: 0.95;
+    margin-top: 5px;
+  }
+  #controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: 15px auto;
+    padding: 10px 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    max-width: 900px;
+  }
+  button, select, input[type=range] {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    font-weight: 600;
+  }
+  button {
+    background: var(--primary-light);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  button:hover { background: var(--primary); }
+  button:active { transform: scale(0.98); }
+  .speed-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  #main-container {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto 30px;
+    padding: 0 14px;
+    flex: 1;
+  }
+  /* Schedule Card */
+  #schedule-box {
+    background: linear-gradient(135deg, #f0fdfa, #ccfbf1);
+    border: 1px solid #99f6e4;
+    border-left: 6px solid var(--accent-schedule);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  #schedule-box h2 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    color: #0f766e;
+    border: none;
+    padding: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #schedule-box h2 a {
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f766e;
+    text-decoration: underline;
+  }
+  .schedule-list {
+    margin: 0;
+    padding-left: 20px;
+  }
+  .schedule-list li {
+    margin-bottom: 6px;
+    font-size: 15px;
+    color: #134e4a;
+    line-height: 1.5;
+  }
+  .schedule-badge {
+    display: inline-block;
+    background: #0d9488;
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+  .no-schedule {
+    margin: 0;
+    font-size: 14px;
+    color: #0f766e;
+    font-style: italic;
+  }
+
+  /* News Sections */
+  section { margin-top: 26px; page-break-inside: avoid; }
+  h2 {
+    border-bottom: 2px solid #fecaca;
+    padding-bottom: 6px;
+    color: var(--primary);
+    font-size: 19px;
+  }
+  article {
+    display: flex;
+    gap: 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    background: var(--card-bg);
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    page-break-inside: avoid;
+  }
+  article img {
+    width: 95px;
+    height: 95px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  article h3 {
+    margin: 4px 0 6px;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  article p {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.55;
+  }
+  .meta {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  a { color: var(--primary-light); text-decoration: none; font-weight: 600; font-size: 13px; }
+  a:hover { text-decoration: underline; }
+  .error-msg { color: #dc2626; text-align: center; font-weight: bold; padding: 20px; }
+  .loading-msg { text-align: center; color: var(--muted); padding: 25px; font-weight: 500; }
+  footer {
+    text-align: center;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    border-top: 1px solid #e5e7eb;
+    background: #fff;
+    margin-top: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗞️ AGMHSS தினசரி தமிழ் செய்திகள் 🗞️</h1>
+  <div class="date-sub" id="headerDate"></div>
+</header>
+
+<div id="controls">
+  <button id="playBtn">▶ செய்திகளை வாசி (Play)</button>
+  <button id="pauseBtn">⏸ இடைநிறுத்து (Pause)</button>
+  <button id="resumeBtn">⏵ தொடர் (Resume)</button>
+  <button id="stopBtn">⏹ நிறுத்து (Stop)</button>
+  <div class="speed-wrap">
+    <label for="speedRange">வேகம்:</label>
+    <input id="speedRange" type="range" min="0.7" max="1.3" step="0.05" value="0.95" />
+    <span id="speedLabel">0.95×</span>
+  </div>
+  <button id="pdfBtn">💾 PDF ஆக சேமி</button>
+</div>
+
+<div id="main-container">
+  <!-- Live School Schedule Section -->
+  <div id="schedule-box">
+    <h2>
+      <span>📅 இன்றைய பள்ளி நிகழ்வுகள் (Today's Schedule)</span>
+      <a href="https://agmhss.github.io/scheduler" target="_blank">அட்டவணையைத் திற ↗</a>
+    </h2>
+    <div id="schedule-content">
+      <p class="no-schedule">இன்றைய பள்ளி நிகழ்வுகள் சரிபார்க்கப்படுகின்றன…</p>
+    </div>
+  </div>
+
+  <!-- News Feeds Container -->
+  <div id="news">
+    <p class="loading-msg">மாணவர்களுக்கான முக்கிய தமிழ் செய்திகள் பதிவேற்றப்படுகின்றன…</p>
+  </div>
+</div>
+
+<footer>Designed by Thiraviya Kumar G</footer>
+
+<script>
+const SCHEDULER_URL = "https://agmhss.github.io/scheduler";
+
+// Multi-source authentic Tamil RSS Feeds (Direct + Google News Tamil RSS topics)
+const FEEDS = {
+  regional: [
+    "https://tamil.oneindia.com/rss/feeds/tamil-tamilnadu-fb.xml",
+    "https://news.google.com/rss/search?q=தமிழ்நாடு+செய்திகள்&hl=ta&gl=IN&ceid=IN:ta"
+  ],
+  national: [
+    "https://tamil.oneindia.com/rss/feeds/tamil-india-fb.xml",
+    "https://news.google.com/rss/search?q=இந்தியா+செய்திகள்+இஸ்ரோ+டெல்லி&hl=ta&gl=IN&ceid=IN:ta"
+  ],
+  education: [
+    "https://news.google.com/rss/search?q=கல்வி+பள்ளி+மாணவர்கள்+தேர்வு+தமிழ்நாடு&hl=ta&gl=IN&ceid=IN:ta",
+    "https://tamil.oneindia.com/rss/feeds/tamil-education-fb.xml"
+  ],
+  sports: [
+    "https://tamil.oneindia.com/rss/feeds/tamil-sports-fb.xml",
+    "https://news.google.com/rss/search?q=விளையாட்டு+கிரிக்கெட்+செஸ்+ஒலிம்பிக்&hl=ta&gl=IN&ceid=IN:ta"
+  ],
+  international: [
+    "https://feeds.bbci.co.uk/tamil/rss.xml",
+    "https://news.google.com/rss/search?q=உலக+செய்திகள்&hl=ta&gl=IN&ceid=IN:ta"
+  ]
+};
+
+const LIMITS = {
+  regional: 4,
+  national: 4,
+  education: 4,
+  sports: 4,
+  international: 2
+};
+
+// Display current date in Tamil in header
+const todayObj = new Date();
+document.getElementById("headerDate").textContent = todayObj.toLocaleDateString("ta-IN", {
+  weekday: "long", year: "numeric", month: "long", day: "numeric"
+});
+
+// --- Helpers ---
+function stripHtml(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html || "";
+  return (div.textContent || div.innerText || "").replace(/\s+/g, " ").trim();
+}
+
+function parseFirstImg(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html || "";
+  const img = div.querySelector("img");
+  return img ? img.src : "";
+}
+
+// --- Student-Friendly Filter (Tamil + English keywords) ---
+function filterStudentNews(arr) {
+  const badWords = [
+    "கொலை","தற்கொலை","வன்முறை","பலாத்காரம்","பாலியல்","கடத்தல்",
+    "திருட்டு","கொள்ளை","கைது","குற்றம்","வெடிகுண்டு","பயங்கரவாதம்",
+    "மரணம்","சடலம்","போதைப்பொருள்","போதை","மதுபானம்","டாஸ்மாக்",
+    "murder","kill","rape","suicide","crime","arrest","assault","terror"
+  ];
+
+  return arr.filter(n => {
+    const text = (n.title + " " + n.description).toLowerCase();
+    return !badWords.some(b => text.includes(b));
+  });
+}
+
+// --- Strict India-Only Filter for National News (Tamil) ---
+function filterIndiaOnlyTamil(arr) {
+  const indiaIndicators = [
+    "இந்தியா","இந்திய","டெல்லி","புதுடெல்லி","மும்பை","சென்னை","கொல்கத்தா",
+    "பெங்களூரு","ஹைதராபாத்","கேரளா","தமிழ்நாடு","கர்நாடகா","மகாராஷ்டிரா",
+    "குஜராத்","ராஜஸ்தான்","பஞ்சாப்","உத்தரப் பிரதேசம்","பீகார்","ஒடிசா",
+    "ஆந்திரா","தெலங்கானா","காஷ்மீர்","லடாக்","புதுச்சேரி","இஸ்ரோ","isro",
+    "டிஆர்டிஓ","ஐஐடி","எய்ம்ஸ்","சிபிஎஸ்இ","உச்ச நீதிமன்றம்","உயர் நீதிமன்றம்",
+    "நாடாளுமன்றம்","மக்களவை","மாநிலங்களவை","ரிசர்வ் வங்கி","ரூபாய்","கோடி",
+    "மோடி","முர்மு","மத்திய அரசு","ரயில்வே","வந்தே பாரத்","தேசிய"
+  ];
+
+  const foreignExclusions = [
+    "அமெரிக்கா","டிரம்ப்","பைடன்","பாகிஸ்தான்","சீனா","ரஷ்யா","உக்ரைன்",
+    "இஸ்ரேல்","காசா","இங்கிலாந்து","லண்டன்","வங்கதேசம்","இலங்கை"
+  ];
+
+  return arr.filter(n => {
+    const text = (n.title + " " + n.description).toLowerCase();
+    const hasIndia = indiaIndicators.some(k => text.includes(k.toLowerCase()));
+    const hasForeignOnly = foreignExclusions.some(f => text.includes(f.toLowerCase())) && !text.includes("இந்திய");
+    if (hasForeignOnly) return false;
+    return hasIndia;
+  });
+}
+
+// --- Live Current Date Schedule Fetcher from agmhss.github.io/scheduler ---
+async function fetchTodaySchedule() {
+  const yyyy = todayObj.getFullYear();
+  const mm = String(todayObj.getMonth() + 1).padStart(2, "0");
+  const dd = String(todayObj.getDate()).padStart(2, "0");
+
+  const isoToday = `${yyyy}-${mm}-${dd}`;
+  const dmyDash = `${dd}-${mm}-${yyyy}`;
+  const dmySlash = `${dd}/${mm}/${yyyy}`;
+  const shortMonth = todayObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const shortMonthIN = todayObj.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
+  const isDateMatch = (str) => {
+    if (!str) return false;
+    const s = String(str).trim();
+    if (s.includes(isoToday) || s.includes(dmyDash) || s.includes(dmySlash)) return true;
+    const parsed = new Date(s);
+    if (!isNaN(parsed.getTime())) {
+      const pY = parsed.getFullYear();
+      const pM = String(parsed.getMonth() + 1).padStart(2, "0");
+      const pD = String(parsed.getDate()).padStart(2, "0");
+      if (`${pY}-${pM}-${pD}` === isoToday) return true;
+    }
+    return false;
+  };
+
+  const normalizeEvents = (rawArray) => {
+    if (!Array.isArray(rawArray)) return [];
+    return rawArray
+      .filter(ev => {
+        const dateVal = ev.isoDate || ev.date || ev.eventDate || ev.startDate || ev.Date || ev.timestamp || "";
+        return isDateMatch(dateVal);
+      })
+      .map(ev => ({
+        title: stripHtml(ev.title || ev.event || ev.name || ev.activity || ev.Title || "பள்ளி நிகழ்வு"),
+        category: stripHtml(ev.category || ev.type || ev.target || ev.audience || ev.Category || ""),
+        description: stripHtml(ev.description || ev.details || ev.note || ev.circular || ev.Description || ""),
+        time: stripHtml(ev.time || ev.slot || "")
+      }));
+  };
+
+  try {
+    let htmlText = "";
+    try {
+      const res = await fetch(SCHEDULER_URL, { cache: "no-store" });
+      if (res.ok) htmlText = await res.text();
+    } catch (_) {
+      const proxyRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(SCHEDULER_URL)}`);
+      if (proxyRes.ok) htmlText = await proxyRes.text();
+    }
+
+    if (htmlText) {
+      // 1. Check for Google Apps Script Web App URL in scheduler source
+      const gasRegex = /https:\/\/script\.google\.com\/macros\/s\/[a-zA-Z0-9_-]+\/exec[^\s"'`]*/g;
+      const gasMatches = htmlText.match(gasRegex);
+      if (gasMatches && gasMatches.length > 0) {
+        for (const gasUrl of [...new Set(gasMatches)]) {
+          try {
+            const gRes = await fetch(gasUrl);
+            if (gRes.ok) {
+              const gJson = await gRes.json();
+              const arr = Array.isArray(gJson) ? gJson : (gJson.events || gJson.data || gJson.items || []);
+              const matched = normalizeEvents(arr);
+              if (matched.length > 0) return matched;
+            }
+          } catch (e) {
+            console.warn("GAS endpoint check skipped:", e);
+          }
+        }
+      }
+
+      // 2. Check for embedded SC_WIDGET_EVENTS or EVENTS array
+      const varMatch = htmlText.match(/(?:SC_WIDGET_EVENTS|EVENTS|scheduleData|eventsData)\s*=\s*(\[[\s\S]*?\]);/);
+      if (varMatch && varMatch[1]) {
+        try {
+          const parsedArr = new Function(`return ${varMatch[1]}`)();
+          const matched = normalizeEvents(parsedArr);
+          if (matched.length > 0) return matched;
+        } catch (e) {
+          console.warn("Embedded event array parse skipped:", e);
+        }
+      }
+
+      // 3. Fallback DOM check
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, "text/html");
+      const domEvents = [];
+      const candidates = doc.querySelectorAll("[data-date], [data-isodate], .event-card, .schedule-item, .event-item, tr, li");
+
+      candidates.forEach(el => {
+        const dataDate = el.getAttribute("data-date") || el.getAttribute("data-isodate") || "";
+        const text = (el.textContent || "").replace(/\s+/g, " ").trim();
+        if (
+          isDateMatch(dataDate) ||
+          text.includes(isoToday) ||
+          text.includes(dmyDash) ||
+          text.includes(dmySlash) ||
+          text.includes(shortMonth) ||
+          text.includes(shortMonthIN)
+        ) {
+          if (text.length > 5 && text.length < 300) {
+            domEvents.push({ title: text, category: "நிகழ்வு", description: "", time: "" });
+          }
+        }
+      });
+
+      if (domEvents.length > 0) return domEvents;
+    }
+  } catch (err) {
+    console.warn("Could not fetch schedule from scheduler:", err);
+  }
+  return [];
+}
+
+function renderSchedule(events) {
+  const box = document.getElementById("schedule-content");
+  if (!events || events.length === 0) {
+    box.innerHTML = `<p class="no-schedule">இன்று (${todayObj.toLocaleDateString("ta-IN")}) சிறப்பு நிகழ்வுகள் எதுவும் குறிப்பிடப்படவில்லை. வழக்கமான பள்ளி கால அட்டவணை பின்பற்றப்படும்.</p>`;
+    return;
+  }
+
+  const ul = document.createElement("ul");
+  ul.className = "schedule-list";
+  events.forEach(ev => {
+    const li = document.createElement("li");
+    const badge = ev.category ? `<span class="schedule-badge">${ev.category}</span>` : "";
+    const timeStr = ev.time ? `<strong>[${ev.time}]</strong> ` : "";
+    const descStr = ev.description ? ` — <span>${ev.description}</span>` : "";
+    li.innerHTML = `${badge}${timeStr}<strong>${ev.title}</strong>${descStr}`;
+    ul.appendChild(li);
+  });
+  box.innerHTML = "";
+  box.appendChild(ul);
+}
+
+// --- Robust RSS Fetch using RSS2JSON + XML Fallback ---
+async function parseRSS(url) {
+  try {
+    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+    const res = await fetch(apiUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.status === "ok" && Array.isArray(data.items)) {
+        return data.items.map((it, i) => {
+          const cleanTitle = stripHtml(it.title || "").replace(/\s*-\s*[^-]+$/, ""); // Clean trailing source name on Google News
+          let cleanDesc = stripHtml(it.description || "");
+          if (cleanDesc === stripHtml(it.title || "")) cleanDesc = "";
+          return {
+            id: url + "#" + i,
+            title: cleanTitle || stripHtml(it.title || ""),
+            description: cleanDesc,
+            link: it.link || "",
+            pubDate: it.pubDate || "",
+            image: it.thumbnail || (it.enclosure && it.enclosure.link) || parseFirstImg(it.content || it.description) || "",
+            source: it.author || new URL(url).host.replace("www.", "")
+          };
+        });
+      }
+    }
+  } catch (_) {}
+
+  // Fallback XML parse via AllOrigins
+  try {
+    const rawUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const res = await fetch(rawUrl);
+    if (!res.ok) return [];
+    const xmlText = await res.text();
+    const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+    const items = Array.from(xml.querySelectorAll("item"));
+    return items.map((it, i) => {
+      const rawTitle = stripHtml(it.querySelector("title")?.textContent || "");
+      const cleanTitle = rawTitle.replace(/\s*-\s*[^-]+$/, "");
+      const descHtml = it.querySelector("description")?.textContent || "";
+      let cleanDesc = stripHtml(descHtml);
+      if (cleanDesc.includes(cleanTitle)) cleanDesc = "";
+
+      const mediaContent = it.getElementsByTagName("media:content")[0];
+      const mediaThumb = it.getElementsByTagName("media:thumbnail")[0];
+      const enclosure = it.querySelector("enclosure");
+      const imgUrl =
+        (mediaContent && mediaContent.getAttribute("url")) ||
+        (mediaThumb && mediaThumb.getAttribute("url")) ||
+        (enclosure && enclosure.getAttribute("url")) ||
+        parseFirstImg(descHtml) || "";
+
+      return {
+        id: url + "#" + i,
+        title: cleanTitle || rawTitle,
+        description: cleanDesc,
+        link: (it.querySelector("link")?.textContent || "").trim(),
+        pubDate: it.querySelector("pubDate")?.textContent || "",
+        image: imgUrl,
+        source: it.querySelector("source")?.textContent || new URL(url).host.replace("www.", "")
+      };
+    });
+  } catch (e) {
+    console.warn("Feed failed:", url, e);
+    return [];
+  }
+}
+
+async function fetchCategoryFeeds(urls) {
+  const results = await Promise.all(urls.map(u => parseRSS(u)));
+  return results.flat();
+}
+
+function dedupeAndLimit(arr, limit) {
+  const seen = new Set();
+  const out = [];
+  for (const item of arr) {
+    if (!item.title) continue;
+    const key = item.title.toLowerCase().slice(0, 50);
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(item);
+      if (out.length >= limit) break;
+    }
+  }
+  return out;
+}
+
+async function loadAllData() {
+  const [schedule, regionalRaw, nationalRaw, educationRaw, sportsRaw, internationalRaw] = await Promise.all([
+    fetchTodaySchedule(),
+    fetchCategoryFeeds(FEEDS.regional),
+    fetchCategoryFeeds(FEEDS.national),
+    fetchCategoryFeeds(FEEDS.education),
+    fetchCategoryFeeds(FEEDS.sports),
+    fetchCategoryFeeds(FEEDS.international)
+  ]);
+
+  const filteredNational = filterIndiaOnlyTamil(filterStudentNews(nationalRaw));
+
+  return {
+    schedule,
+    regional: dedupeAndLimit(filterStudentNews(regionalRaw), LIMITS.regional),
+    national: dedupeAndLimit(filteredNational.length ? filteredNational : filterStudentNews(nationalRaw), LIMITS.national),
+    education: dedupeAndLimit(filterStudentNews(educationRaw), LIMITS.education),
+    sports: dedupeAndLimit(filterStudentNews(sportsRaw), LIMITS.sports),
+    international: dedupeAndLimit(filterStudentNews(internationalRaw), LIMITS.international)
+  };
+}
+
+// --- Rendering ---
+function renderNews(all) {
+  const container = document.getElementById("news");
+  container.innerHTML = "";
+
+  const totalArticles =
+    all.regional.length +
+    all.national.length +
+    all.education.length +
+    all.sports.length +
+    all.international.length;
+
+  if (totalArticles === 0) {
+    container.innerHTML = "<p class='error-msg'>செய்திகளைப் பதிவேற்றுவதில் சிக்கல் உள்ளது. பக்கத்தை மீண்டும் புதுப்பிக்கவும் (Refresh).</p>";
+    return;
+  }
+
+  const createSection = (title, arr) => {
+    if (!arr || arr.length === 0) return;
+    const sec = document.createElement("section");
+    const h2 = document.createElement("h2");
+    h2.textContent = title;
+    sec.appendChild(h2);
+
+    arr.forEach(a => {
+      const art = document.createElement("article");
+      if (a.image) {
+        const img = document.createElement("img");
+        img.src = a.image;
+        img.alt = "";
+        img.onerror = () => img.remove();
+        art.appendChild(img);
+      }
+      const div = document.createElement("div");
+      const pubStr = a.pubDate && !isNaN(new Date(a.pubDate))
+        ? " • " + new Date(a.pubDate).toLocaleString("ta-IN", { dateStyle: "medium", timeStyle: "short" })
+        : "";
+      div.innerHTML = `
+        <div class='meta'>${a.source}${pubStr}</div>
+        <h3>${a.title}</h3>
+        ${a.description ? `<p>${a.description}</p>` : ""}
+        <a href='${a.link}' target='_blank' rel='noopener'>மேலும் வாசிக்க ↗</a>`;
+      art.appendChild(div);
+      sec.appendChild(art);
+    });
+    container.appendChild(sec);
+  };
+
+  createSection("📍 தமிழ்நாடு செய்திகள் (Regional – Tamil Nadu)", all.regional);
+  createSection("🇮🇳 தேசிய செய்திகள் – இந்தியா (National – India)", all.national);
+  createSection("🎓 கல்வி செய்திகள் (Education)", all.education);
+  createSection("🏆 விளையாட்டு செய்திகள் (Sports)", all.sports);
+  createSection("🌐 உலக செய்திகள் (International)", all.international);
+}
+
+// --- Tamil Voice Setup ---
+let allVoices = [];
+function loadVoices() { allVoices = window.speechSynthesis.getVoices(); }
+window.speechSynthesis.onvoiceschanged = loadVoices;
+
+function getTamilVoice() {
+  if (!allVoices.length) loadVoices();
+  return (
+    allVoices.find(v => v.lang.toLowerCase().includes("ta-in")) ||
+    allVoices.find(v => v.lang.toLowerCase().startsWith("ta")) ||
+    allVoices.find(v => v.name.toLowerCase().includes("tamil") || v.name.toLowerCase().includes("valluvar")) ||
+    allVoices.find(v => v.lang.toLowerCase().includes("en-in")) ||
+    allVoices[0]
+  );
+}
+
+// --- Tamil Speech Script Builder ---
+function buildTamilScript(data) {
+  const dateStr = todayObj.toLocaleDateString("ta-IN", { year: "numeric", month: "long", day: "numeric" });
+  const script = [
+    `இனிய காலை வணக்கம். இன்று ${dateStr}. ஏ ஜி எம் எச் எஸ் எஸ் தினசரி தமிழ் செய்தி அறிக்கை.`
+  ];
+
+  if (data.schedule && data.schedule.length > 0) {
+    script.push("முதலில் இன்றைய பள்ளி நிகழ்வுகள்.");
+    data.schedule.forEach((ev, idx) => {
+      const desc = ev.description ? `. ${ev.description}` : "";
+      script.push(`நிகழ்வு ${idx + 1}: ${ev.title}${desc}.`);
+    });
+  }
+
+  const addCategoryScript = (heading, arr) => {
+    if (!arr || !arr.length) return;
+    script.push(heading);
+    arr.forEach((a, i) => {
+      const firstSentence = a.description ? a.description.split(/[.?!]/)[0] : "";
+      script.push(`${i + 1}. ${a.title}. ${firstSentence ? firstSentence + "." : ""}`);
+    });
+  };
+
+  addCategoryScript("தமிழ்நாடு செய்திகள்.", data.regional);
+  addCategoryScript("தேசிய செய்திகள், இந்தியா.", data.national);
+  addCategoryScript("கல்வி செய்திகள்.", data.education);
+  addCategoryScript("விளையாட்டுச் செய்திகள்.", data.sports);
+  addCategoryScript("உலகச் செய்திகள்.", data.international);
+
+  script.push("இத்துடன் இன்றைய செய்தி அறிக்கை நிறைவடைந்தது. நன்றி, வணக்கம்!");
+  return script;
+}
+
+function speakTamilNews(data, rate) {
+  window.speechSynthesis.cancel();
+  const lines = buildTamilScript(data);
+  const tamilVoice = getTamilVoice();
+
+  lines.forEach(text => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "ta-IN";
+    if (tamilVoice) u.voice = tamilVoice;
+    u.rate = rate;
+    u.pitch = 1.0;
+    u.volume = 1;
+    window.speechSynthesis.speak(u);
+  });
+}
+
+// --- Tamil Unicode PDF Export via html2pdf ---
+function saveTamilPDF() {
+  const dateStr = todayObj.toLocaleDateString("en-IN", {
+    year: "numeric", month: "short", day: "numeric"
+  }).replace(/\s+/g, "_");
+
+  const element = document.getElementById("main-container");
+  const opt = {
+    margin:       [10, 10, 10, 10],
+    filename:     `AGMHSS_Tamil_News_${dateStr}.pdf`,
+    image:        { type: "jpeg", quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true },
+    jsPDF:        { unit: "mm", format: "a4", orientation: "portrait" }
+  };
+
+  html2pdf().set(opt).from(element).save();
+}
+
+// --- Initialize App ---
+(async () => {
+  try {
+    const allData = await loadAllData();
+    renderSchedule(allData.schedule);
+    renderNews(allData);
+
+    const play = document.getElementById("playBtn"),
+          pause = document.getElementById("pauseBtn"),
+          resume = document.getElementById("resumeBtn"),
+          stop = document.getElementById("stopBtn"),
+          speed = document.getElementById("speedRange"),
+          label = document.getElementById("speedLabel"),
+          pdfBtn = document.getElementById("pdfBtn");
+
+    let rate = parseFloat(speed.value);
+    speed.oninput = () => {
+      rate = parseFloat(speed.value);
+      label.textContent = rate.toFixed(2) + "×";
+    };
+    play.onclick = () => speakTamilNews(allData, rate);
+    pause.onclick = () => window.speechSynthesis.pause();
+    resume.onclick = () => window.speechSynthesis.resume();
+    stop.onclick = () => window.speechSynthesis.cancel();
+    pdfBtn.onclick = () => saveTamilPDF();
+  } catch (e) {
+    console.error(e);
+    document.getElementById("news").innerHTML =
+      "<p class='error-msg'>செய்திகளைப் பதிவேற்ற முடியவில்லை. இணைய இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்.</p>";
+  }
+})();
+</script>
+</body>
+</html>
